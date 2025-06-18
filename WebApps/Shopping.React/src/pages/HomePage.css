@@ -1,0 +1,129 @@
+.home-page {
+  margin: -20px;
+}
+
+.hero-section {
+  background: linear-gradient(
+    135deg,
+    #ff9a9e 0%,
+    #fecfef 25%,
+    #fecfef 75%,
+    #ffeaa7 100%
+  );
+  color: #2d3436;
+  padding: 4rem 0;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: "🎈🎪🎭🎨🎁🧸🚗🎮";
+  position: absolute;
+  top: 10px;
+  left: 0;
+  right: 0;
+  font-size: 2rem;
+  opacity: 0.3;
+  animation: float 20s infinite linear;
+}
+
+@keyframes float {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.hero-content p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+}
+
+.hero-btn {
+  font-size: 1.1rem;
+  padding: 12px 30px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.features-section {
+  padding: 4rem 0;
+  background-color: white;
+}
+
+.features-section h2 {
+  text-align: center;
+  margin-bottom: 3rem;
+  font-size: 2.5rem;
+  color: #333;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.feature-card {
+  background: linear-gradient(145deg, #fff 0%, #f8f9fa 100%);
+  padding: 2rem;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+  border: 3px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+}
+
+.feature-card:hover {
+  transform: translateY(-10px) scale(1.02);
+  border: 3px solid #ff6b6b;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.feature-card h3 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.3rem;
+}
+
+.feature-card p {
+  color: #666;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+
+  .hero-content p {
+    font-size: 1rem;
+  }
+
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
+}
