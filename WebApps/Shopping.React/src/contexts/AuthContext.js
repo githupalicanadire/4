@@ -11,10 +11,12 @@ import api from "../services/api";
 const config = {
   authority: "http://localhost:6007",
   client_id: "shopping-spa",
-  redirect_uri: "http://localhost:6006/callback",
+  redirect_uri: `${window.location.origin}/callback`,
   response_type: "code",
-  scope: "openid profile shopping_api",
-  post_logout_redirect_uri: "http://localhost:6006",
+  scope: "openid profile email roles shopping_api catalog basket ordering",
+  post_logout_redirect_uri: window.location.origin,
+  automaticSilentRenew: true,
+  silent_redirect_uri: `${window.location.origin}/silent-callback`,
 };
 
 const userManager = new UserManager(config);
@@ -36,9 +38,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
       setLoading(true);
-      
-      // Önce Identity Server'dan token al
-      const response = await fetch("http://localhost:6007/connect/token", {
+
+      // Identity Server'dan token al (Resource Owner Password Grant)
+      const tokenResponse = await fetch("http://localhost:6007/connect/token", {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -48,52 +50,86 @@ export const AuthProvider = ({ children }) => {
           username: username,
           password: password,
           client_id: "shopping-spa",
-          scope: "openid profile shopping_api",
+          scope:
+            "openid profile email roles shopping_api catalog basket ordering",
         }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!tokenResponse.ok) {
+        const errorData = await tokenResponse.json();
+        console.error("Token error:", errorData);
         throw new Error(errorData.error_description || "Giriş başarısız");
       }
 
-      const data = await response.json();
-      console.log("Token response:", data); // Debug için
-      
-      // Token'ı kullanarak kullanıcı bilgilerini al
-      const userResponse = await fetch("http://localhost:6007/connect/userinfo", {
-        method: "GET",
-        headers: {
-          "Authorization": `Bearer ${data.access_token}`,
-          "Content-Type": "application/json",
-        },
+      const tokenData = await tokenResponse.json();
+      console.log("🔑 Token received:", {
+        access_token: tokenData.access_token ? "✅" : "❌",
+        id_token: tokenData.id_token ? "✅" : "❌",
+        expires_in: tokenData.expires_in,
       });
 
-      if (!userResponse.ok) {
-        console.error("Userinfo response:", await userResponse.text()); // Debug için
+      // UserInfo endpoint'inden kullanıcı bilgilerini al
+      const userInfoResponse = await fetch(
+        "http://localhost:6007/connect/userinfo",
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${tokenData.access_token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      if (!userInfoResponse.ok) {
+        const errorText = await userInfoResponse.text();
+        console.error("UserInfo error:", errorText);
         throw new Error("Kullanıcı bilgileri alınamadı");
       }
 
-      const userInfo = await userResponse.json();
-      console.log("Userinfo response:", userInfo); // Debug için
-      
-      // Kullanıcı bilgilerini ve token'ı birleştir
-      const user = {
-        ...userInfo,
-        access_token: data.access_token,
-        id_token: data.id_token,
-        token_type: data.token_type,
-        expires_at: Date.now() + data.expires_in * 1000,
+      const userInfo = await userInfoResponse.json();
+      console.log("👤 User info received:", userInfo);
+
+      // Kullanıcı nesnesini oluştur
+      const userData = {
+        // Token bilgileri
+        access_token: tokenData.access_token,
+        id_token: tokenData.id_token,
+        token_type: tokenData.token_type || "Bearer",
+        expires_at: Date.now() + tokenData.expires_in * 1000,
+        refresh_token: tokenData.refresh_token,
+
+        // Kullanıcı profil bilgileri
+        sub: userInfo.sub,
+        username: userInfo.preferred_username || username,
+        email: userInfo.email,
+        firstName: userInfo.given_name || "",
+        lastName: userInfo.family_name || "",
+        name: userInfo.name || userInfo.preferred_username || username,
+        roles: userInfo.role
+          ? Array.isArray(userInfo.role)
+            ? userInfo.role
+            : [userInfo.role]
+          : [],
+
+        // Raw data
+        profile: userInfo,
+        session_state: tokenData.session_state,
       };
 
-      setUser(user);
-      
-      // API çağrıları için token'ı ayarla
-      api.defaults.headers.common["Authorization"] = `Bearer ${data.access_token}`;
-      
-      return { success: true, user };
+      // Local storage'a kaydet
+      localStorage.setItem("user", JSON.stringify(userData));
+      localStorage.setItem("access_token", tokenData.access_token);
+
+      setUser(userData);
+
+      // API çağrıları için default header'ı ayarla
+      api.defaults.headers.common["Authorization"] =
+        `Bearer ${tokenData.access_token}`;
+
+      console.log("✅ Login successful for user:", userData.username);
+      return { success: true, user: userData };
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("❌ Login error:", error);
       return {
         success: false,
         message: error.message || "Giriş yapılırken hata oluştu",
@@ -115,12 +151,13 @@ export const AuthProvider = ({ children }) => {
     try {
       const user = await userManager.signinRedirectCallback();
       setUser(user);
-      
+
       // Set token for API calls
       if (user.access_token) {
-        api.defaults.headers.common["Authorization"] = `Bearer ${user.access_token}`;
+        api.defaults.headers.common["Authorization"] =
+          `Bearer ${user.access_token}`;
       }
-      
+
       return { success: true, user };
     } catch (error) {
       console.error("Callback error:", error);
@@ -151,7 +188,8 @@ export const AuthProvider = ({ children }) => {
         if (user) {
           setUser(user);
           if (user.access_token) {
-            api.defaults.headers.common["Authorization"] = `Bearer ${user.access_token}`;
+            api.defaults.headers.common["Authorization"] =
+              `Bearer ${user.access_token}`;
           }
         }
       } catch (error) {
