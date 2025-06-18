@@ -357,22 +357,18 @@ export const AuthProvider = ({ children }) => {
     clearStoredAuth,
   ]);
 
-  // Auto token refresh
-  useEffect(() => {
-    if (!user || !isAuthenticated()) return;
-
-    const checkTokenExpiry = () => {
-      if (isTokenExpired(user)) {
-        console.log("⏰ Token will expire soon, refreshing...");
-        refreshToken();
-      }
-    };
-
-    // Check every 5 minutes
-    const interval = setInterval(checkTokenExpiry, 5 * 60 * 1000);
-
-    return () => clearInterval(interval);
-  }, [user, isAuthenticated, isTokenExpired, refreshToken]);
+  // Auto token refresh disabled for now to prevent infinite loops
+  // useEffect(() => {
+  //   if (!user || !isAuthenticated()) return;
+  //   const checkTokenExpiry = () => {
+  //     if (isTokenExpired(user)) {
+  //       console.log("⏰ Token will expire soon, refreshing...");
+  //       refreshToken();
+  //     }
+  //   };
+  //   const interval = setInterval(checkTokenExpiry, 5 * 60 * 1000);
+  //   return () => clearInterval(interval);
+  // }, [user, isAuthenticated, isTokenExpired, refreshToken]);
 
   const value = {
     // State
