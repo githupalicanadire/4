@@ -31,33 +31,54 @@ public class CustomProfileService : IProfileService
             return;
         }
 
-        var claims = new List<Claim>();
+        // Start with subject claims (already filtered by IdentityServer)
+        var claims = new List<Claim>(context.Subject.Claims);
 
-        // Add standard claims
-        claims.Add(new Claim(JwtClaimTypes.Subject, user.Id));
-        claims.Add(new Claim(JwtClaimTypes.Name, user.FullName ?? ""));
-        claims.Add(new Claim(JwtClaimTypes.GivenName, user.FirstName ?? ""));
-        claims.Add(new Claim(JwtClaimTypes.FamilyName, user.LastName ?? ""));
-        claims.Add(new Claim(JwtClaimTypes.Email, user.Email ?? ""));
-        claims.Add(new Claim(JwtClaimTypes.EmailVerified, user.EmailConfirmed.ToString().ToLower()));
-        claims.Add(new Claim(JwtClaimTypes.PreferredUserName, user.UserName ?? ""));
+        // Only add claims that are specifically requested but might be missing
+        var requestedClaimTypes = context.RequestedClaimTypes.ToList();
 
-        // Add role claims
-        var roles = await _userManager.GetRolesAsync(user);
-        foreach (var role in roles)
+        // Ensure we have the essential claims for requested scopes
+        if (requestedClaimTypes.Contains(JwtClaimTypes.Name) && !claims.Any(c => c.Type == JwtClaimTypes.Name))
         {
-            claims.Add(new Claim(JwtClaimTypes.Role, role));
+            claims.Add(new Claim(JwtClaimTypes.Name, user.FullName ?? user.UserName ?? ""));
         }
 
-        // Add custom user claims from ASP.NET Identity
-        var userClaims = await _userManager.GetClaimsAsync(user);
-        claims.AddRange(userClaims);
+        if (requestedClaimTypes.Contains(JwtClaimTypes.GivenName) && !claims.Any(c => c.Type == JwtClaimTypes.GivenName))
+        {
+            claims.Add(new Claim(JwtClaimTypes.GivenName, user.FirstName ?? ""));
+        }
 
-        // Remove duplicates and filter by requested claim types
+        if (requestedClaimTypes.Contains(JwtClaimTypes.FamilyName) && !claims.Any(c => c.Type == JwtClaimTypes.FamilyName))
+        {
+            claims.Add(new Claim(JwtClaimTypes.FamilyName, user.LastName ?? ""));
+        }
+
+        if (requestedClaimTypes.Contains(JwtClaimTypes.Email) && !claims.Any(c => c.Type == JwtClaimTypes.Email))
+        {
+            claims.Add(new Claim(JwtClaimTypes.Email, user.Email ?? ""));
+        }
+
+        if (requestedClaimTypes.Contains(JwtClaimTypes.EmailVerified) && !claims.Any(c => c.Type == JwtClaimTypes.EmailVerified))
+        {
+            claims.Add(new Claim(JwtClaimTypes.EmailVerified, user.EmailConfirmed.ToString().ToLower()));
+        }
+
+        // Add role claims if requested
+        if (requestedClaimTypes.Contains(JwtClaimTypes.Role))
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            foreach (var role in roles)
+            {
+                if (!claims.Any(c => c.Type == JwtClaimTypes.Role && c.Value == role))
+                {
+                    claims.Add(new Claim(JwtClaimTypes.Role, role));
+                }
+            }
+        }
+
+        // Filter claims to only include requested types
         context.IssuedClaims = claims
-            .GroupBy(x => x.Type)
-            .Select(group => group.First()) // Take first of each type to avoid duplicates
-            .Where(x => context.RequestedClaimTypes.Contains(x.Type))
+            .Where(x => requestedClaimTypes.Contains(x.Type))
             .ToList();
     }
 
