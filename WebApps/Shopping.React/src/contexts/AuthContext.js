@@ -221,26 +221,52 @@ export const AuthProvider = ({ children }) => {
     return getUserRoles().includes(role);
   };
 
-  // Effects
+  // Check for existing session on app load
   useEffect(() => {
-    const checkUser = async () => {
+    const initializeAuth = async () => {
       try {
-        const user = await userManager.getUser();
-        if (user) {
-          setUser(user);
-          if (user.access_token) {
+        setLoading(true);
+
+        // Check localStorage first
+        const storedUser = localStorage.getItem("user");
+        const storedToken = localStorage.getItem("access_token");
+
+        if (storedUser && storedToken) {
+          const userData = JSON.parse(storedUser);
+
+          // Check if token is still valid
+          if (userData.expires_at && userData.expires_at > Date.now()) {
+            console.log("🔄 Restoring user session for:", userData.username);
+            setUser(userData);
             api.defaults.headers.common["Authorization"] =
-              `Bearer ${user.access_token}`;
+              `Bearer ${storedToken}`;
+          } else {
+            console.log("⏰ Stored session expired, clearing...");
+            localStorage.removeItem("user");
+            localStorage.removeItem("access_token");
           }
         }
+
+        // Try OIDC user manager as fallback
+        try {
+          const oidcUser = await userManager.getUser();
+          if (oidcUser && oidcUser.access_token && !oidcUser.expired) {
+            console.log("🔄 Found valid OIDC session");
+            setUser(oidcUser);
+            api.defaults.headers.common["Authorization"] =
+              `Bearer ${oidcUser.access_token}`;
+          }
+        } catch (oidcError) {
+          console.log("ℹ️ No OIDC session found");
+        }
       } catch (error) {
-        console.error("Error checking user:", error);
+        console.error("❌ Error initializing auth:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    checkUser();
+    initializeAuth();
   }, []);
 
   const value = {
@@ -252,6 +278,9 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     getCurrentUser,
     getCurrentCustomerId,
+    getAccessToken,
+    getUserRoles,
+    hasRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
