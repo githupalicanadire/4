@@ -11,7 +11,11 @@ public static class Config
             new IdentityResources.OpenId(),
             new IdentityResources.Profile(),
             new IdentityResources.Email(),
-            new IdentityResource("roles", "User roles", new List<string> { "role" })
+            new IdentityResource(
+                name: "roles",
+                displayName: "User roles",
+                claimTypes: new[] { "role" }
+            )
         };
 
     public static IEnumerable<ApiScope> ApiScopes =>
