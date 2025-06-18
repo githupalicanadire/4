@@ -23,6 +23,9 @@ builder.Services.AddMarten(opts =>
 // Note: InitializeMartenWith moved to runtime for better error handling
 
 //Authentication & Authorization (for admin product management)
+// Clear default claim mappings to preserve original JWT claims
+Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTypeMap.Clear();
+
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
@@ -34,8 +37,13 @@ builder.Services.AddAuthentication("Bearer")
             ValidateIssuer = true,
             ValidIssuer = "http://localhost:6007",
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromMinutes(5)
+            ClockSkew = TimeSpan.FromMinutes(5),
+            NameClaimType = "preferred_username", // Map username claim
+            RoleClaimType = "role" // Map role claim
         };
+
+        // Preserve original claim names
+        options.MapInboundClaims = false;
     });
 
 builder.Services.AddAuthorization(options =>
