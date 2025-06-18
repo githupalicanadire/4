@@ -15,6 +15,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DebugPage from "./pages/DebugPage";
 import JwtDebugPage from "./pages/JwtDebugPage";
+import AuthDebugPage from "./pages/AuthDebugPage";
 import CallbackPage from "./pages/CallbackPage";
 
 function App() {
@@ -104,7 +105,7 @@ function App() {
               }
             />
 
-            {/* Debug routes - development only and require auth */}
+            {/* Debug routes - development only */}
             {process.env.NODE_ENV === "development" && (
               <>
                 <Route
@@ -123,6 +124,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
+                <Route path="/auth-debug" element={<AuthDebugPage />} />
               </>
             )}
 
