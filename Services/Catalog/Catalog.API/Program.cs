@@ -22,6 +22,40 @@ builder.Services.AddMarten(opts =>
 
 // Note: InitializeMartenWith moved to runtime for better error handling
 
+//Authentication & Authorization (for admin product management)
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = "http://localhost:6007";
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidIssuer = "http://localhost:6007",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("admin"));
+});
+
+//CORS for React app
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowShoppingApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://localhost:6006")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 
 builder.Services.AddHealthChecks()
@@ -30,8 +64,11 @@ builder.Services.AddHealthChecks()
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-app.MapCarter();
+app.UseCors("AllowShoppingApp");
+app.UseAuthentication();
+app.UseAuthorization();
 
+app.MapCarter();
 app.UseExceptionHandler(options => { });
 
 app.UseHealthChecks("/health",
