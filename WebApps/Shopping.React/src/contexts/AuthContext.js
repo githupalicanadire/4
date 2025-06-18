@@ -271,22 +271,20 @@ export const AuthProvider = ({ children }) => {
     const currentUser = user || getStoredUser();
     const hasUser = !!currentUser;
     const hasToken = !!currentUser?.access_token;
-    const tokenExpired = currentUser ? isTokenExpired(currentUser) : true;
+
+    // Basit kontrol - eğer token varsa authenticated say
+    // Token expiry kontrolünü sadece initialization'da yap
+    const isAuth = hasUser && hasToken;
 
     console.log("🔍 Auth Check:", {
       hasUser,
       hasToken,
-      tokenExpired,
+      isAuth,
       username: currentUser?.username,
-      expires_at: currentUser?.expires_at,
-      now: Date.now(),
     });
 
-    const isAuth = hasUser && hasToken && !tokenExpired;
-    console.log("✅ isAuthenticated result:", isAuth);
-
     return isAuth;
-  }, [user, getStoredUser, isTokenExpired]);
+  }, [user, getStoredUser]);
 
   // Get current user info
   const getCurrentUser = useCallback(() => {
