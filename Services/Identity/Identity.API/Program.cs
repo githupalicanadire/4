@@ -144,13 +144,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+// Configure CORS based on environment
 if (app.Environment.IsDevelopment())
 {
     app.UseCors("DevelopmentCors");
 }
 else
 {
-    app.UseCors("CorsPolicy");
+    app.UseCors("ProductionCors");
 }
 
 app.UseStaticFiles();
