@@ -160,93 +160,33 @@ app.MapHealthChecks("/health", new HealthCheckOptions
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
 });
 
-// Initialize Database
-static void InitializeDatabase(IApplicationBuilder app)
+// Initialize Database and Seed Data
+using (var scope = app.Services.CreateScope())
 {
-    using (var serviceScope = app.ApplicationServices.GetService<IServiceScopeFactory>().CreateScope())
+    var services = scope.ServiceProvider;
+
+    try
     {
-        var context = serviceScope.ServiceProvider.GetRequiredService<ConfigurationDbContext>();
-        var userContext = serviceScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var userManager = serviceScope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = serviceScope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        Log.Information("🚀 Initializing Identity Server database...");
 
-        try
-        {
-            // Veritabanını oluştur ve migration'ları uygula
-            userContext.Database.Migrate();
-            context.Database.Migrate();
+        // Apply migrations
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        var configContext = services.GetRequiredService<ConfigurationDbContext>();
 
-            // Identity Server yapılandırma verilerini ekle
-            if (!context.Clients.Any())
-            {
-                foreach (var client in Config.Clients)
-                {
-                    context.Clients.Add(client.ToEntity());
-                }
-                context.SaveChanges();
-            }
+        await context.Database.MigrateAsync();
+        await configContext.Database.MigrateAsync();
 
-            if (!context.IdentityResources.Any())
-            {
-                foreach (var resource in Config.IdentityResources)
-                {
-                    context.IdentityResources.Add(resource.ToEntity());
-                }
-                context.SaveChanges();
-            }
+        // Seed data using the SeedData class
+        await SeedData.EnsureSeedData(services);
 
-            if (!context.ApiScopes.Any())
-            {
-                foreach (var scope in Config.ApiScopes)
-                {
-                    context.ApiScopes.Add(scope.ToEntity());
-                }
-                context.SaveChanges();
-            }
-
-            if (!context.ApiResources.Any())
-            {
-                foreach (var resource in Config.ApiResources)
-                {
-                    context.ApiResources.Add(resource.ToEntity());
-                }
-                context.SaveChanges();
-            }
-
-            // Test kullanıcılarını ekle
-            if (!userContext.Users.Any())
-            {
-                // Admin rolünü oluştur
-                if (!roleManager.RoleExistsAsync("Admin").Result)
-                {
-                    roleManager.CreateAsync(new IdentityRole("Admin")).Wait();
-                }
-
-                // Admin kullanıcısını oluştur
-                var adminUser = new ApplicationUser
-                {
-                    UserName = "admin",
-                    Email = "admin@example.com",
-                    EmailConfirmed = true
-                };
-
-                var result = userManager.CreateAsync(adminUser, "Admin123!").Result;
-                if (result.Succeeded)
-                {
-                    userManager.AddToRoleAsync(adminUser, "Admin").Wait();
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Log.Error(ex, "An error occurred while initializing the database.");
-            throw;
-        }
+        Log.Information("✅ Identity Server initialization completed successfully");
+    }
+    catch (Exception ex)
+    {
+        Log.Error(ex, "❌ An error occurred while initializing the Identity Server database");
+        throw;
     }
 }
-
-// Initialize Database
-InitializeDatabase(app);
 
 Log.Information("🔐 Identity Server starting up...");
 app.Run();
