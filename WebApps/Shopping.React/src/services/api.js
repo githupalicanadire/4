@@ -22,26 +22,28 @@ api.interceptors.request.use(
     console.log(`Making request to: ${config.url}`);
 
     // Add JWT token if available
-    const token = localStorage.getItem("shopping_token");
+    const token = localStorage.getItem("access_token");
     if (token) {
       // Debug: Check token format
-      console.log("Token length:", token.length);
-      console.log("Token starts with:", token.substring(0, 50));
+      console.log("🔑 Using token:", token.substring(0, 50) + "...");
 
-      // Check if token has proper JWT format (should have 2 dots)
+      // Check if token has proper JWT format (should have 3 parts)
       const parts = token.split(".");
       if (parts.length !== 3) {
         console.error(
           "❌ Invalid JWT format. Expected 3 parts, got:",
           parts.length,
         );
-        console.error("Token parts:", parts);
         // Clear invalid token
-        localStorage.removeItem("shopping_token");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
         return config;
       }
 
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("✅ Authorization header set");
+    } else {
+      console.log("⚠️ No access token found in localStorage");
     }
 
     return config;
@@ -89,7 +91,9 @@ api.interceptors.response.use(
         case 401:
           errorMessage = "Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.";
           // Token expired, clear local storage
-          localStorage.removeItem("shopping_token");
+          localStorage.removeItem("access_token");
+          localStorage.removeItem("user");
+          localStorage.removeItem("refresh_token");
           // Redirect to login if not already there
           if (!window.location.pathname.includes("/login")) {
             window.location.href = "/login";
