@@ -96,38 +96,16 @@ public static class SeedData
     public static async Task SeedUsers(IServiceProvider serviceProvider)
     {
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // Demo user "swn" - keeping compatibility with current frontend
-        var swnUser = await userManager.FindByNameAsync("swn");
-        if (swnUser == null)
+        // Create roles first
+        var roles = new[] { "admin", "customer" };
+        foreach (var roleName in roles)
         {
-            Log.Information("👤 Creating demo user 'swn'...");
-            swnUser = new ApplicationUser
+            if (!await roleManager.RoleExistsAsync(roleName))
             {
-                UserName = "swn",
-                Email = "swn@shopping.com",
-                FirstName = "Demo",
-                LastName = "User",
-                EmailConfirmed = true
-            };
-
-            var result = await userManager.CreateAsync(swnUser, "Password123!");
-            if (result.Succeeded)
-            {
-                await userManager.AddClaimsAsync(swnUser, new[]
-                {
-                    new Claim("sub", swnUser.Id),
-                    new Claim("name", swnUser.FullName),
-                    new Claim("given_name", swnUser.FirstName),
-                    new Claim("family_name", swnUser.LastName),
-                    new Claim("email", swnUser.Email),
-                    new Claim("role", "customer")
-                });
-                Log.Information("✅ Demo user 'swn' created successfully");
-            }
-            else
-            {
-                Log.Error("❌ Failed to create demo user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+                Log.Information("🔐 Creating role: {RoleName}", roleName);
+                await roleManager.CreateAsync(new IdentityRole(roleName));
             }
         }
 
@@ -148,20 +126,41 @@ public static class SeedData
             var result = await userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {
-                await userManager.AddClaimsAsync(adminUser, new[]
-                {
-                    new Claim("sub", adminUser.Id),
-                    new Claim("name", adminUser.FullName),
-                    new Claim("given_name", adminUser.FirstName),
-                    new Claim("family_name", adminUser.LastName),
-                    new Claim("email", adminUser.Email),
-                    new Claim("role", "admin")
-                });
+                await userManager.AddToRoleAsync(adminUser, "admin");
                 Log.Information("✅ Admin user created successfully");
+            }
+            else
+            {
+                Log.Error("❌ Failed to create admin user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
             }
         }
 
-        // Only keep admin and one demo user - users should register themselves
-        Log.Information("✅ Users can now register themselves via the registration system");
+        // Demo user "swn" - for frontend compatibility
+        var swnUser = await userManager.FindByNameAsync("swn");
+        if (swnUser == null)
+        {
+            Log.Information("👤 Creating demo user 'swn'...");
+            swnUser = new ApplicationUser
+            {
+                UserName = "swn",
+                Email = "swn@shopping.com",
+                FirstName = "Demo",
+                LastName = "User",
+                EmailConfirmed = true
+            };
+
+            var result = await userManager.CreateAsync(swnUser, "Password123!");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(swnUser, "customer");
+                Log.Information("✅ Demo user 'swn' created successfully");
+            }
+            else
+            {
+                Log.Error("❌ Failed to create demo user: {Errors}", string.Join(", ", result.Errors.Select(e => e.Description)));
+            }
+        }
+
+        Log.Information("✅ User seeding completed. New users can register themselves.");
     }
 }
