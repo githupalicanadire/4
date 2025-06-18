@@ -7,16 +7,19 @@ public class GetBasketEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/basket/{userName}", async (string userName, ISender sender, HttpContext context) =>
+        app.MapGet("/basket", async (ISender sender, HttpContext context) =>
         {
-            // Validate user can only access their own basket
-            var currentUser = context.User?.Identity?.Name;
-            if (string.IsNullOrEmpty(currentUser) || currentUser != userName)
+            // Get username from JWT claims
+            var username = context.User?.Claims?.FirstOrDefault(x => x.Type == "username")?.Value
+                        ?? context.User?.Claims?.FirstOrDefault(x => x.Type == "preferred_username")?.Value
+                        ?? context.User?.Identity?.Name;
+
+            if (string.IsNullOrEmpty(username))
             {
-                return Results.Forbid();
+                return Results.Problem("User identity not found in token", statusCode: 400);
             }
 
-            var result = await sender.Send(new GetBasketQuery(userName));
+            var result = await sender.Send(new GetBasketQuery(username));
             var response = result.Adapt<GetBasketResponse>();
             return Results.Ok(response);
         })
@@ -25,8 +28,7 @@ public class GetBasketEndpoints : ICarterModule
         .Produces<GetBasketResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status403Forbidden)
-        .WithSummary("Get User Basket")
-        .WithDescription("Get shopping basket for the authenticated user");
+        .WithSummary("Get Current User's Basket")
+        .WithDescription("Get shopping basket for the authenticated user using JWT claims");
     }
 }
