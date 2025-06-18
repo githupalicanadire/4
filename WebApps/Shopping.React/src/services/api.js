@@ -5,7 +5,7 @@ const API_BASE_URL =
   process.env.NODE_ENV === "production"
     ? "/api"
     : window.location.hostname === "localhost"
-      ? "http://localhost:6004"
+      ? "/api" // Use nginx proxy from localhost:6006/api
       : "http://yarpapigateway:8080";
 
 const api = axios.create({
