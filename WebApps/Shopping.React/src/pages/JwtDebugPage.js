@@ -144,25 +144,121 @@ const JwtDebugPage = () => {
         <div className="col-md-6">
           <div className="card mb-3">
             <div className="card-header">
-              <h5>Current Token Status</h5>
+              <h5>🔑 Current JWT Token</h5>
             </div>
             <div className="card-body">
               <p>
-                <strong>Token exists:</strong> {token ? "Yes" : "No"}
+                <strong>Token exists:</strong>{" "}
+                {getAccessToken() ? "✅ Yes" : "❌ No"}
               </p>
-              <p>
-                <strong>Token length:</strong> {token ? token.length : "N/A"}
-              </p>
-              {token && (
-                <p>
-                  <strong>Token preview:</strong> {token.substring(0, 50)}...
-                </p>
+              {getAccessToken() && (
+                <>
+                  <p>
+                    <strong>Token length:</strong> {getAccessToken().length}
+                  </p>
+                  <p>
+                    <strong>Token preview:</strong>{" "}
+                    {getAccessToken().substring(0, 50)}...
+                  </p>
+                </>
               )}
               <button className="btn btn-primary" onClick={analyzeStoredToken}>
-                Analyze Stored Token
+                Analyze Token
               </button>
             </div>
           </div>
+
+          {jwtClaims && (
+            <div className="card mb-3">
+              <div className="card-header">
+                <h5>👤 JWT Claims</h5>
+              </div>
+              <div className="card-body">
+                <table className="table table-sm">
+                  <tbody>
+                    <tr>
+                      <td>
+                        <strong>Subject (sub):</strong>
+                      </td>
+                      <td>{jwtClaims.sub}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Username:</strong>
+                      </td>
+                      <td>
+                        {jwtClaims.username ||
+                          jwtClaims.preferred_username ||
+                          "N/A"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Name:</strong>
+                      </td>
+                      <td>{jwtClaims.name || "N/A"}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Email:</strong>
+                      </td>
+                      <td>{jwtClaims.email || "N/A"}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Roles:</strong>
+                      </td>
+                      <td>
+                        {jwtClaims.role
+                          ? Array.isArray(jwtClaims.role)
+                            ? jwtClaims.role.join(", ")
+                            : jwtClaims.role
+                          : "N/A"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Scopes:</strong>
+                      </td>
+                      <td>{jwtClaims.scope || "N/A"}</td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Issued At:</strong>
+                      </td>
+                      <td>
+                        {jwtClaims.iat
+                          ? new Date(jwtClaims.iat * 1000).toLocaleString()
+                          : "N/A"}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <strong>Expires At:</strong>
+                      </td>
+                      <td>
+                        {jwtClaims.exp
+                          ? new Date(jwtClaims.exp * 1000).toLocaleString()
+                          : "N/A"}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <details>
+                  <summary>🔍 Raw Claims Data</summary>
+                  <pre
+                    style={{
+                      fontSize: "12px",
+                      maxHeight: "200px",
+                      overflow: "auto",
+                    }}
+                  >
+                    {JSON.stringify(jwtClaims, null, 2)}
+                  </pre>
+                </details>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="col-md-6">
