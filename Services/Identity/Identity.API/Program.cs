@@ -43,41 +43,62 @@ var migrationsAssembly = typeof(Program).Assembly.GetName().Name;
 
 builder.Services.AddIdentityServer(options =>
 {
+    // Event configuration
     options.Events.RaiseErrorEvents = true;
     options.Events.RaiseInformationEvents = true;
     options.Events.RaiseFailureEvents = true;
     options.Events.RaiseSuccessEvents = true;
 
+    // Issuer configuration
     options.EmitStaticAudienceClaim = true;
     options.IssuerUri = "http://localhost:6007";
-    
-    // Otomatik anahtar yönetimini devre dışı bırak
-    options.KeyManagement.Enabled = false;
+
+    // User interaction configuration
+    options.UserInteraction.LoginUrl = "/Account/Login";
+    options.UserInteraction.LogoutUrl = "/Account/Logout";
+    options.UserInteraction.ErrorUrl = "/Home/Error";
+
+    // Authentication configuration
+    options.Authentication.CookieLifetime = TimeSpan.FromHours(2);
+    options.Authentication.CookieSlidingExpiration = true;
+
+    // Caching configuration
+    options.Caching.ClientStoreExpiration = TimeSpan.FromMinutes(5);
+    options.Caching.ResourceStoreExpiration = TimeSpan.FromMinutes(5);
+
+    // Key management for production readiness
+    if (builder.Environment.IsDevelopment())
+    {
+        options.KeyManagement.Enabled = false; // Use developer signing credential
+    }
+    else
+    {
+        options.KeyManagement.Enabled = true;
+        options.KeyManagement.KeyPath = "/app/keys";
+    }
 })
 .AddConfigurationStore(options =>
 {
-    options.ConfigureDbContext = b => b.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+    options.ConfigureDbContext = b => b.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.MigrationsAssembly(typeof(Program).Assembly.GetName().Name));
 })
 .AddOperationalStore(options =>
 {
-    options.ConfigureDbContext = b => b.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
+    options.ConfigureDbContext = b => b.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.MigrationsAssembly(typeof(Program).Assembly.GetName().Name));
+
+    // Cleanup configuration
+    options.EnableTokenCleanup = true;
+    options.TokenCleanupInterval = 3600; // 1 hour
 })
 .AddAspNetIdentity<ApplicationUser>()
-.AddDeveloperSigningCredential(); // Development ortamı için imzalama anahtarı
+.AddProfileService<CustomProfileService>() // Custom profile service
+.AddDeveloperSigningCredential(); // Development signing credential
 
-// Add JWT Authentication
-builder.Services.AddAuthentication("Bearer")
-    .AddJwtBearer("Bearer", options =>
-    {
-        options.Authority = "http://localhost:6007";
-        options.RequireHttpsMetadata = false;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateAudience = false
-        };
-    });
+// JWT Authentication is handled by IdentityServer itself
+// Removed redundant configuration
 
 // Add CORS
 builder.Services.AddCors(options =>
