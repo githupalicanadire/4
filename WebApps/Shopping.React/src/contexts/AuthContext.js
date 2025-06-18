@@ -114,8 +114,21 @@ export const AuthProvider = ({ children }) => {
 
   const isTokenExpired = useCallback((user) => {
     if (!user?.expires_at) return true;
-    // Add 5 minute buffer
-    return Date.now() >= user.expires_at - 5 * 60 * 1000;
+
+    const now = Date.now();
+    const expiry = user.expires_at;
+    const isExpired = now >= expiry;
+
+    console.log("⏰ Token expiry check:", {
+      now: new Date(now).toLocaleString(),
+      expiry: new Date(expiry).toLocaleString(),
+      isExpired,
+      timeLeft: isExpired
+        ? 0
+        : Math.round((expiry - now) / 1000 / 60) + " minutes",
+    });
+
+    return isExpired;
   }, []);
 
   const login = async (username, password) => {
