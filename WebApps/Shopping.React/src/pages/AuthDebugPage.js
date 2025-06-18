@@ -4,6 +4,27 @@ import { useAuth } from "../contexts/AuthContext";
 const AuthDebugPage = () => {
   const { user, isAuthenticated, getAccessToken, getCurrentUser } = useAuth();
   const [localStorageData, setLocalStorageData] = useState({});
+  const [decodedToken, setDecodedToken] = useState(null);
+
+  const decodeJWT = (token) => {
+    if (!token) return null;
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(""),
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error("Error decoding JWT:", error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     // Get all auth-related localStorage data
@@ -13,6 +34,12 @@ const AuthDebugPage = () => {
       refresh_token: localStorage.getItem("refresh_token"),
     };
     setLocalStorageData(authData);
+
+    // Decode the access token
+    if (authData.access_token) {
+      const decoded = decodeJWT(authData.access_token);
+      setDecodedToken(decoded);
+    }
   }, []);
 
   const clearAuth = () => {
