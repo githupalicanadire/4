@@ -7,15 +7,23 @@ public class GetBasketEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/basket", async (ISender sender, HttpContext context) =>
+        app.MapGet("/basket", async (ISender sender, HttpContext context, ILogger<GetBasketEndpoints> logger) =>
         {
+            // Debug: Log all claims
+            var claims = context.User?.Claims?.ToList() ?? new List<System.Security.Claims.Claim>();
+            logger.LogInformation("🔍 JWT Claims received: {Claims}",
+                string.Join(", ", claims.Select(c => $"{c.Type}={c.Value}")));
+
             // Get username from JWT claims
             var username = context.User?.Claims?.FirstOrDefault(x => x.Type == "username")?.Value
                         ?? context.User?.Claims?.FirstOrDefault(x => x.Type == "preferred_username")?.Value
                         ?? context.User?.Identity?.Name;
 
+            logger.LogInformation("👤 Extracted username: {Username}", username);
+
             if (string.IsNullOrEmpty(username))
             {
+                logger.LogWarning("❌ No username found in JWT claims");
                 return Results.Problem("User identity not found in token", statusCode: 400);
             }
 
