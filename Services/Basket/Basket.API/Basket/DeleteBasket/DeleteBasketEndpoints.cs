@@ -7,16 +7,19 @@ public class DeleteBasketEndpoints : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/basket/{userName}", async (string userName, ISender sender, HttpContext context) =>
+        app.MapDelete("/basket", async (ISender sender, HttpContext context) =>
         {
-            // Validate user can only delete their own basket
-            var currentUser = context.User?.Identity?.Name;
-            if (string.IsNullOrEmpty(currentUser) || currentUser != userName)
+            // Get username from JWT claims
+            var username = context.User?.Claims?.FirstOrDefault(x => x.Type == "username")?.Value
+                        ?? context.User?.Claims?.FirstOrDefault(x => x.Type == "preferred_username")?.Value
+                        ?? context.User?.Identity?.Name;
+
+            if (string.IsNullOrEmpty(username))
             {
-                return Results.Forbid();
+                return Results.Problem("User identity not found in token", statusCode: 400);
             }
 
-            var result = await sender.Send(new DeleteBasketCommand(userName));
+            var result = await sender.Send(new DeleteBasketCommand(username));
             var response = result.Adapt<DeleteBasketResponse>();
 
             return Results.Ok(response);
@@ -26,9 +29,8 @@ public class DeleteBasketEndpoints : ICarterModule
         .Produces<DeleteBasketResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status403Forbidden)
         .ProducesProblem(StatusCodes.Status404NotFound)
-        .WithSummary("Delete User Basket")
-        .WithDescription("Delete shopping basket for the authenticated user");
+        .WithSummary("Delete Current User's Basket")
+        .WithDescription("Delete shopping basket for the authenticated user using JWT claims");
     }
 }
