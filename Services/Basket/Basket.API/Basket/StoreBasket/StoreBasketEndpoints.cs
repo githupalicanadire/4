@@ -9,26 +9,31 @@ public class StoreBasketEndpoints : ICarterModule
     {
         app.MapPost("/basket", async (StoreBasketRequest request, ISender sender, HttpContext context) =>
         {
-            // Validate user can only modify their own basket
-            var currentUser = context.User?.Identity?.Name;
-            if (string.IsNullOrEmpty(currentUser) || currentUser != request.Cart.UserName)
+            // Get username from JWT claims
+            var username = context.User?.Claims?.FirstOrDefault(x => x.Type == "username")?.Value
+                        ?? context.User?.Claims?.FirstOrDefault(x => x.Type == "preferred_username")?.Value
+                        ?? context.User?.Identity?.Name;
+
+            if (string.IsNullOrEmpty(username))
             {
-                return Results.Forbid();
+                return Results.Problem("User identity not found in token", statusCode: 400);
             }
+
+            // Set the username from JWT claims (ignore what frontend sends)
+            request.Cart.UserName = username;
 
             var command = request.Adapt<StoreBasketCommand>();
             var result = await sender.Send(command);
             var response = result.Adapt<StoreBasketResponse>();
 
-            return Results.Created($"/basket/{response.UserName}", response);
+            return Results.Created($"/basket", response);
         })
         .RequireAuthorization()
         .WithName("StoreUserBasket")
         .Produces<StoreBasketResponse>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status403Forbidden)
-        .WithSummary("Store User Basket")
-        .WithDescription("Create or update shopping basket for the authenticated user");
+        .WithSummary("Store Current User's Basket")
+        .WithDescription("Create or update shopping basket for the authenticated user using JWT claims");
     }
 }
