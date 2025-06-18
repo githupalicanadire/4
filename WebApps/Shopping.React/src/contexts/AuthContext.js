@@ -268,23 +268,33 @@ export const AuthProvider = ({ children }) => {
 
   // Check authentication status
   const isAuthenticated = useCallback(() => {
-    const currentUser = user || getStoredUser();
-    const hasUser = !!currentUser;
-    const hasToken = !!currentUser?.access_token;
+    // First check if we have a user in state
+    if (user && user.access_token) {
+      console.log("🔍 Auth Check (state):", {
+        hasUser: true,
+        hasToken: true,
+        isAuth: true,
+        username: user.username,
+      });
+      return true;
+    }
 
-    // Basit kontrol - eğer token varsa authenticated say
-    // Token expiry kontrolünü sadece initialization'da yap
+    // Fallback to localStorage check
+    const storedUser = getStoredUser();
+    const storedToken = getStoredToken();
+    const hasUser = !!storedUser;
+    const hasToken = !!storedToken;
     const isAuth = hasUser && hasToken;
 
-    console.log("🔍 Auth Check:", {
+    console.log("🔍 Auth Check (localStorage):", {
       hasUser,
       hasToken,
       isAuth,
-      username: currentUser?.username,
+      username: storedUser?.username,
     });
 
     return isAuth;
-  }, [user, getStoredUser]);
+  }, [user, getStoredUser, getStoredToken]);
 
   // Get current user info
   const getCurrentUser = useCallback(() => {
@@ -338,7 +348,7 @@ export const AuthProvider = ({ children }) => {
               `Bearer ${storedToken}`;
           }
         } else {
-          console.log("ℹ️ No stored session found");
+          console.log("���️ No stored session found");
         }
       } catch (error) {
         console.error("❌ Auth initialization error:", error);
