@@ -12,7 +12,9 @@ const Header = () => {
   console.log("🏠 Header: Auth state -", {
     hasUser: !!user,
     isAuth: authState,
-    userName: user?.username,
+    userName: user?.username || user?.name,
+    firstName: user?.firstName,
+    roles: user?.roles,
   });
 
   const handleLogout = () => {
@@ -66,16 +68,25 @@ const Header = () => {
                   className="user-button"
                   onClick={() => setShowUserMenu(!showUserMenu)}
                 >
-                  👤 {user?.firstName || user?.username}
+                  👤{" "}
+                  {user?.firstName ||
+                    user?.name ||
+                    user?.username ||
+                    "Kullanıcı"}
                 </button>
 
                 {showUserMenu && (
                   <div className="user-dropdown">
                     <div className="user-info">
                       <strong>
-                        {user?.firstName} {user?.lastName}
+                        {user?.firstName && user?.lastName
+                          ? `${user.firstName} ${user.lastName}`
+                          : user?.name || user?.username || "Kullanıcı"}
                       </strong>
-                      <span>{user?.email}</span>
+                      <span>{user?.email || "Email bulunamadı"}</span>
+                      {user?.roles && user.roles.length > 0 && (
+                        <small>👑 {user.roles.join(", ")}</small>
+                      )}
                     </div>
                     <hr />
                     <button onClick={handleLogout} className="logout-btn">
