@@ -1,18 +1,18 @@
 import api from "./api";
 
 export const basketService = {
-  // Get basket by username
-  getBasket: async (userName) => {
+  // Get current user's basket (using JWT authentication)
+  getBasket: async () => {
     try {
-      console.log(`🛒 Fetching basket for user: ${userName}`);
-      const response = await api.get(`/basket-service/basket/${userName}`);
+      console.log(`🛒 Fetching current user's basket via JWT...`);
+      const response = await api.get(`/basket-service/basket`);
 
       // Backend GetBasketResponse formatında { cart: ShoppingCart } döner
       const basket = response.data.cart || response.data;
 
       // Backend'den gelen basket formatını normalize et
       return {
-        userName: basket.userName || userName,
+        userName: basket.userName || "",
         items: basket.items || [],
         totalPrice: basket.totalPrice || 0,
       };
@@ -20,10 +20,10 @@ export const basketService = {
       console.error("❌ Get basket error:", error);
 
       // Eğer basket bulunamazsa (404), boş basket döndür
-      if (error.originalError?.response?.status === 404) {
-        console.log("📦 Creating new empty basket");
+      if (error.response?.status === 404) {
+        console.log("📦 Creating new empty basket for current user");
         return {
-          userName: userName,
+          userName: "", // Backend will set from JWT
           items: [],
           totalPrice: 0,
         };
@@ -39,9 +39,10 @@ export const basketService = {
       console.log("💾 Storing basket:", basket);
 
       // Backend'in beklediği StoreBasketRequest format
+      // Note: Backend will set userName from JWT claims
       const basketData = {
         cart: {
-          userName: basket.userName,
+          userName: "", // Backend will override this with JWT claims
           items: basket.items.map((item) => ({
             quantity: item.quantity,
             color: item.color || "Default",
@@ -60,11 +61,11 @@ export const basketService = {
     }
   },
 
-  // Delete basket
-  deleteBasket: async (userName) => {
+  // Delete current user's basket (using JWT authentication)
+  deleteBasket: async () => {
     try {
-      console.log(`🗑️ Deleting basket for user: ${userName}`);
-      const response = await api.delete(`/basket-service/basket/${userName}`);
+      console.log(`🗑️ Deleting current user's basket via JWT...`);
+      const response = await api.delete(`/basket-service/basket`);
       return response.data;
     } catch (error) {
       console.error("❌ Delete basket error:", error);
@@ -78,11 +79,11 @@ export const basketService = {
       console.log("🎯 Checking out basket:", basketCheckout);
 
       // Backend'in beklediği CheckoutBasketRequest formatı
+      // Note: Backend will set userName and customerId from JWT claims
       const checkoutData = {
         basketCheckoutDto: {
-          userName: basketCheckout.userName,
-          customerId:
-            basketCheckout.customerId || "00000000-0000-0000-0000-000000000000", // Default GUID
+          userName: "", // Backend will override with JWT claims
+          customerId: "00000000-0000-0000-0000-000000000000", // Backend will override with JWT claims
           totalPrice: basketCheckout.totalPrice,
 
           // Shipping Address
@@ -114,13 +115,13 @@ export const basketService = {
     }
   },
 
-  // Add item to basket
-  addItemToBasket: async (userName, item) => {
+  // Add item to current user's basket (using JWT authentication)
+  addItemToBasket: async (item) => {
     try {
-      console.log(`➕ Adding item to basket for ${userName}:`, item);
+      console.log(`➕ Adding item to current user's basket:`, item);
 
-      // Önce mevcut basket'i al
-      const currentBasket = await basketService.getBasket(userName);
+      // Önce mevcut basket'i al (JWT kullanarak)
+      const currentBasket = await basketService.getBasket();
 
       // Item'ı basket'e ekle veya miktarını artır
       const existingItemIndex = currentBasket.items.findIndex(
