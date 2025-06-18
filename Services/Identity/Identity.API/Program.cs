@@ -104,17 +104,22 @@ builder.Services.AddIdentityServer(options =>
 // Add CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("CorsPolicy",
-        builder => builder
-            .WithOrigins(
-                "http://localhost:6006",
-                "http://localhost:3000",
-                "http://localhost:8080",
-                "http://localhost:4200"
-            )
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials());
+    options.AddPolicy("DevelopmentCors", policy => policy
+        .WithOrigins(
+            "http://localhost:6006",
+            "http://localhost:3000",
+            "http://localhost:8080",
+            "http://localhost:4200"
+        )
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials());
+
+    options.AddPolicy("ProductionCors", policy => policy
+        .WithOrigins() // Add production origins here
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials());
 });
 
 // Add Controllers
