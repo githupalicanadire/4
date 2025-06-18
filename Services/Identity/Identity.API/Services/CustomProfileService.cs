@@ -1,8 +1,10 @@
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
+using Duende.IdentityServer.Extensions;
 using Identity.API.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
+using IdentityModel;
 
 namespace Identity.API.Services;
 
@@ -32,20 +34,20 @@ public class CustomProfileService : IProfileService
         var principal = await _claimsFactory.CreateAsync(user);
         var claims = principal.Claims.ToList();
 
-        // Add custom claims
-        claims.Add(new Claim("sub", user.Id));
-        claims.Add(new Claim("name", user.FullName));
-        claims.Add(new Claim("given_name", user.FirstName ?? ""));
-        claims.Add(new Claim("family_name", user.LastName ?? ""));
-        claims.Add(new Claim("email", user.Email ?? ""));
-        claims.Add(new Claim("email_verified", user.EmailConfirmed.ToString().ToLower()));
-        claims.Add(new Claim("preferred_username", user.UserName ?? ""));
+        // Add custom claims with proper constructors
+        claims.Add(new Claim(JwtClaimTypes.Subject, user.Id));
+        claims.Add(new Claim(JwtClaimTypes.Name, user.FullName ?? ""));
+        claims.Add(new Claim(JwtClaimTypes.GivenName, user.FirstName ?? ""));
+        claims.Add(new Claim(JwtClaimTypes.FamilyName, user.LastName ?? ""));
+        claims.Add(new Claim(JwtClaimTypes.Email, user.Email ?? ""));
+        claims.Add(new Claim(JwtClaimTypes.EmailVerified, user.EmailConfirmed.ToString().ToLower()));
+        claims.Add(new Claim(JwtClaimTypes.PreferredUserName, user.UserName ?? ""));
 
         // Add role claims
         var roles = await _userManager.GetRolesAsync(user);
         foreach (var role in roles)
         {
-            claims.Add(new Claim("role", role));
+            claims.Add(new Claim(JwtClaimTypes.Role, role));
         }
 
         // Filter claims based on requested scopes
