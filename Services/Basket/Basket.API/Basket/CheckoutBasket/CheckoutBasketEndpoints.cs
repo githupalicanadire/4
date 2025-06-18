@@ -9,11 +9,24 @@ public class CheckoutBasketEndpoints : ICarterModule
     {
         app.MapPost("/basket/checkout", async (CheckoutBasketRequest request, ISender sender, HttpContext context) =>
         {
-            // Validate user can only checkout their own basket
-            var currentUser = context.User?.Identity?.Name;
-            if (string.IsNullOrEmpty(currentUser) || currentUser != request.BasketCheckoutDto.UserName)
+            // Get user information from JWT claims
+            var username = context.User?.Claims?.FirstOrDefault(x => x.Type == "username")?.Value
+                        ?? context.User?.Claims?.FirstOrDefault(x => x.Type == "preferred_username")?.Value
+                        ?? context.User?.Identity?.Name;
+
+            var customerId = context.User?.Claims?.FirstOrDefault(x => x.Type == "sub")?.Value
+                          ?? context.User?.Claims?.FirstOrDefault(x => x.Type == "user_id")?.Value;
+
+            if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(customerId))
             {
-                return Results.Forbid();
+                return Results.Problem("User identity not found in token", statusCode: 400);
+            }
+
+            // Set user information from JWT claims (ignore what frontend sends)
+            request.BasketCheckoutDto.UserName = username;
+            if (Guid.TryParse(customerId, out var customerGuid))
+            {
+                request.BasketCheckoutDto.CustomerId = customerGuid;
             }
 
             var command = request.Adapt<CheckoutBasketCommand>();
@@ -27,8 +40,7 @@ public class CheckoutBasketEndpoints : ICarterModule
         .Produces<CheckoutBasketResponse>(StatusCodes.Status200OK)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status401Unauthorized)
-        .ProducesProblem(StatusCodes.Status403Forbidden)
-        .WithSummary("Checkout User Basket")
-        .WithDescription("Checkout shopping basket for the authenticated user");
+        .WithSummary("Checkout Current User's Basket")
+        .WithDescription("Checkout shopping basket for the authenticated user using JWT claims");
     }
 }
