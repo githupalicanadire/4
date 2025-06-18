@@ -9,21 +9,33 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Duende.IdentityServer" Version="7.0.0" />
-    <PackageReference Include="Duende.IdentityServer.EntityFramework" Version="7.0.0" />
-    <PackageReference Include="Duende.IdentityServer.AspNetIdentity" Version="7.0.0" />
+    <!-- Updated Duende IdentityServer packages to fix vulnerabilities -->
+    <PackageReference Include="Duende.IdentityServer" Version="7.0.8" />
+    <PackageReference Include="Duende.IdentityServer.EntityFramework" Version="7.0.8" />
+    <PackageReference Include="Duende.IdentityServer.AspNetIdentity" Version="7.0.8" />
+
+    <!-- Updated JWT package to fix vulnerabilities -->
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.1.2" />
+    <PackageReference Include="IdentityModel" Version="7.0.0" />
+
+    <!-- ASP.NET Core Identity -->
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.0" />
+
+    <!-- Entity Framework -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0" />
+
+    <!-- Logging -->
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
+
+    <!-- Health Checks -->
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.HealthChecks" Version="2.2.0" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.1" />
     <PackageReference Include="AspNetCore.HealthChecks.SqlServer" Version="8.0.2" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.0.3" />
-    <PackageReference Include="AutoMapper" Version="10.1.1" />
+
+    <!-- Swagger -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
