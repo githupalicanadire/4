@@ -31,13 +31,15 @@ Microsoft.IdentityModel.JsonWebTokens.JsonWebTokenHandler.DefaultInboundClaimTyp
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
     {
-        options.Authority = "http://localhost:6007";
+        // Use configuration-based authority to support both development and Docker environments
+        var authority = builder.Configuration["IdentityServerSettings:Authority"] ?? "http://localhost:6007";
+        options.Authority = authority;
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
         {
             ValidateAudience = false,
             ValidateIssuer = true,
-            ValidIssuer = "http://localhost:6007",
+            ValidIssuer = authority,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromMinutes(5),
             NameClaimType = "preferred_username", // Map username claim
