@@ -9,25 +9,26 @@ const CartPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const { getCurrentUser } = useAuth();
-  const user = getCurrentUser();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
-    fetchBasket();
-  }, []);
+    if (isAuthenticated()) {
+      fetchBasket();
+    }
+  }, [isAuthenticated]);
 
   const fetchBasket = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await basketService.getBasket(user);
+      const response = await basketService.getBasket(); // JWT-based, no username needed
       console.log("🛒 Fetched basket:", response);
       setBasket(response);
     } catch (err) {
       console.error("❌ Basket fetch error:", err);
       setError(err.message);
       setBasket({
-        userName: user,
+        userName: "", // Will be set by backend from JWT
         items: [],
         totalPrice: 0,
       });
