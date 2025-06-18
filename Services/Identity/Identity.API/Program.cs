@@ -92,7 +92,7 @@ builder.Services.AddIdentityServer(options =>
     options.TokenCleanupInterval = 3600; // 1 hour
 })
 .AddAspNetIdentity<ApplicationUser>()
-// .AddProfileService<CustomProfileService>() // Temporarily disabled to test default behavior
+.AddProfileService<CustomProfileService>() // Custom profile service for proper user claims
 .AddDeveloperSigningCredential(); // Development signing credential
 
 // JWT Authentication is handled by IdentityServer itself

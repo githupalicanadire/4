@@ -31,52 +31,53 @@ public class CustomProfileService : IProfileService
             return;
         }
 
-        // Start with subject claims (already filtered by IdentityServer)
-        var claims = new List<Claim>(context.Subject.Claims);
+        var claims = new List<Claim>();
 
-        // Only add claims that are specifically requested but might be missing
+        // Add standard identity claims based on requested scopes
         var requestedClaimTypes = context.RequestedClaimTypes.ToList();
 
-        // Ensure we have the essential claims for requested scopes
-        if (requestedClaimTypes.Contains(JwtClaimTypes.Name) && !claims.Any(c => c.Type == JwtClaimTypes.Name))
+        // Add subject (always required)
+        claims.Add(new Claim(JwtClaimTypes.Subject, user.Id));
+
+        // Add profile claims if profile scope requested
+        if (requestedClaimTypes.Contains(JwtClaimTypes.Name))
         {
-            claims.Add(new Claim(JwtClaimTypes.Name, user.FullName ?? user.UserName ?? ""));
+            claims.Add(new Claim(JwtClaimTypes.Name, user.FullName?.Trim() ?? user.UserName ?? ""));
         }
 
-        if (requestedClaimTypes.Contains(JwtClaimTypes.GivenName) && !claims.Any(c => c.Type == JwtClaimTypes.GivenName))
+        if (requestedClaimTypes.Contains(JwtClaimTypes.GivenName))
         {
             claims.Add(new Claim(JwtClaimTypes.GivenName, user.FirstName ?? ""));
         }
 
-        if (requestedClaimTypes.Contains(JwtClaimTypes.FamilyName) && !claims.Any(c => c.Type == JwtClaimTypes.FamilyName))
+        if (requestedClaimTypes.Contains(JwtClaimTypes.FamilyName))
         {
             claims.Add(new Claim(JwtClaimTypes.FamilyName, user.LastName ?? ""));
         }
 
-        if (requestedClaimTypes.Contains(JwtClaimTypes.Email) && !claims.Any(c => c.Type == JwtClaimTypes.Email))
+        if (requestedClaimTypes.Contains(JwtClaimTypes.PreferredUserName))
         {
-            claims.Add(new Claim(JwtClaimTypes.Email, user.Email ?? ""));
+            claims.Add(new Claim(JwtClaimTypes.PreferredUserName, user.UserName ?? ""));
         }
 
-        if (requestedClaimTypes.Contains(JwtClaimTypes.EmailVerified) && !claims.Any(c => c.Type == JwtClaimTypes.EmailVerified))
+        // Add email claims if email scope requested
+        if (requestedClaimTypes.Contains(JwtClaimTypes.Email))
         {
+            claims.Add(new Claim(JwtClaimTypes.Email, user.Email ?? ""));
             claims.Add(new Claim(JwtClaimTypes.EmailVerified, user.EmailConfirmed.ToString().ToLower()));
         }
 
-        // Add role claims if requested
+        // Add role claims if roles scope requested
         if (requestedClaimTypes.Contains(JwtClaimTypes.Role))
         {
             var roles = await _userManager.GetRolesAsync(user);
             foreach (var role in roles)
             {
-                if (!claims.Any(c => c.Type == JwtClaimTypes.Role && c.Value == role))
-                {
-                    claims.Add(new Claim(JwtClaimTypes.Role, role));
-                }
+                claims.Add(new Claim(JwtClaimTypes.Role, role));
             }
         }
 
-        // Filter claims to only include requested types
+        // Filter and return only requested claims
         context.IssuedClaims = claims
             .Where(x => requestedClaimTypes.Contains(x.Type))
             .ToList();
