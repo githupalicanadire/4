@@ -56,27 +56,36 @@ public static class Config
     public static IEnumerable<Client> Clients =>
         new Client[]
         {
-            // React SPA Client
+            // React SPA Client (Shopping Application)
             new Client
             {
                 ClientId = "shopping-spa",
-                ClientName = "Shopping React SPA",
+                ClientName = "ToyLand Shopping Application",
+
+                // Support both Authorization Code (SPA) and Resource Owner Password (for direct login)
                 AllowedGrantTypes = new List<string>
                 {
                     GrantTypes.Code.First(),
                     GrantTypes.ResourceOwnerPassword.First()
                 },
+
                 RequirePkce = true,
                 RequireClientSecret = false,
                 RequireConsent = false,
+                AllowOfflineAccess = true,
 
+                // Redirect URIs for both development ports
                 RedirectUris = {
                     "http://localhost:6006/callback",
-                    "http://localhost:3000/callback" // React dev server
+                    "http://localhost:3000/callback",
+                    "http://localhost:6006/login",
+                    "http://localhost:3000/login"
                 },
                 PostLogoutRedirectUris = {
                     "http://localhost:6006/",
-                    "http://localhost:3000/"
+                    "http://localhost:3000/",
+                    "http://localhost:6006/login",
+                    "http://localhost:3000/login"
                 },
                 AllowedCorsOrigins = {
                     "http://localhost:6006",
@@ -96,11 +105,19 @@ public static class Config
                 },
 
                 AllowAccessTokensViaBrowser = true,
-                AccessTokenLifetime = 3600,
-                IdentityTokenLifetime = 3600,
+                AccessTokenLifetime = 3600, // 1 hour
+                IdentityTokenLifetime = 3600, // 1 hour
+                AuthorizationCodeLifetime = 300, // 5 minutes
                 RefreshTokenUsage = TokenUsage.ReUse,
                 RefreshTokenExpiration = TokenExpiration.Sliding,
-                SlidingRefreshTokenLifetime = 3600 * 24 * 30 // 30 days
+                SlidingRefreshTokenLifetime = 3600 * 24 * 7, // 7 days
+
+                // Enable resource owner password flow for direct login
+                AllowPlainTextPkce = false,
+
+                Properties = {
+                    { "description", "ToyLand e-commerce shopping application for toy enthusiasts" }
+                }
             },
 
             // API Gateway Client (Machine to Machine)
