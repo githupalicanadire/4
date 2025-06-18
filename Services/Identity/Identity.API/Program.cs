@@ -21,6 +21,7 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using Microsoft.OpenApi.Models;
+using Identity.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
