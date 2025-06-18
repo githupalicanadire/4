@@ -141,19 +141,48 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      await userManager.signoutRedirect();
+      console.log("🚪 Logging out user...");
+
+      // Clear local storage
+      localStorage.removeItem("user");
+      localStorage.removeItem("access_token");
+
+      // Clear API headers
+      delete api.defaults.headers.common["Authorization"];
+
+      // Clear user state
+      setUser(null);
+
+      // Optional: Call Identity Server logout endpoint
+      if (user?.access_token) {
+        try {
+          await fetch("http://localhost:6007/connect/endsession", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${user.access_token}`,
+            },
+          });
+        } catch (error) {
+          console.warn("End session failed:", error);
+        }
+      }
+
+      console.log("✅ Logout successful");
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("❌ Logout error:", error);
     }
-  }, []);
+  }, [user]);
 
   const handleCallback = async () => {
     try {
       const user = await userManager.signinRedirectCallback();
-      setUser(user);
 
-      // Set token for API calls
-      if (user.access_token) {
+      if (user?.access_token) {
+        // Store user data
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("access_token", user.access_token);
+
+        setUser(user);
         api.defaults.headers.common["Authorization"] =
           `Bearer ${user.access_token}`;
       }
@@ -169,15 +198,27 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAuthenticated = () => {
-    return !!user;
+    return !!user && !!user.access_token && user.expires_at > Date.now();
   };
 
   const getCurrentUser = () => {
-    return user?.profile?.name || "guest";
+    return user?.name || user?.username || user?.profile?.name || "guest";
   };
 
   const getCurrentCustomerId = () => {
-    return user?.profile?.sub || null;
+    return user?.sub || user?.profile?.sub || null;
+  };
+
+  const getAccessToken = () => {
+    return user?.access_token || null;
+  };
+
+  const getUserRoles = () => {
+    return user?.roles || [];
+  };
+
+  const hasRole = (role) => {
+    return getUserRoles().includes(role);
   };
 
   // Effects
