@@ -1,11 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 
 const JwtDebugPage = () => {
   const [testResults, setTestResults] = useState({});
   const [loading, setLoading] = useState(false);
-  const { token } = useAuth();
+  const [jwtClaims, setJwtClaims] = useState(null);
+  const { user, getAccessToken } = useAuth();
+
+  // Parse JWT claims when component mounts
+  useEffect(() => {
+    const token = getAccessToken();
+    if (token) {
+      try {
+        // Parse JWT payload (base64 decode the middle part)
+        const payload = token.split(".")[1];
+        const decodedPayload = JSON.parse(atob(payload));
+        setJwtClaims(decodedPayload);
+      } catch (error) {
+        console.error("Failed to parse JWT:", error);
+      }
+    }
+  }, [user, getAccessToken]);
 
   const testJwtGeneration = async () => {
     setLoading(true);
