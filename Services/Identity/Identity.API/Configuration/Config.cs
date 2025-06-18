@@ -160,8 +160,7 @@ public static class Config
                 AllowOfflineAccess = true,
                 AccessTokenLifetime = 3600,
                 RefreshTokenExpiration = TokenExpiration.Sliding,
-                SlidingRefreshTokenLifetime = 3600 * 24 * 7, // 7 days for demo
-                Description = "Demo client for development and testing purposes only"
+                SlidingRefreshTokenLifetime = 3600 * 24 * 7 // 7 days for demo
             }
         };
 }
