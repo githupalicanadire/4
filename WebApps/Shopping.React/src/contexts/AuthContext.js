@@ -224,11 +224,23 @@ export const AuthProvider = ({ children }) => {
   // Check authentication status
   const isAuthenticated = useCallback(() => {
     const currentUser = user || getStoredUser();
-    return !!(
-      currentUser &&
-      currentUser.access_token &&
-      !isTokenExpired(currentUser)
-    );
+    const hasUser = !!currentUser;
+    const hasToken = !!currentUser?.access_token;
+    const tokenExpired = currentUser ? isTokenExpired(currentUser) : true;
+
+    console.log("🔍 Auth Check:", {
+      hasUser,
+      hasToken,
+      tokenExpired,
+      username: currentUser?.username,
+      expires_at: currentUser?.expires_at,
+      now: Date.now(),
+    });
+
+    const isAuth = hasUser && hasToken && !tokenExpired;
+    console.log("✅ isAuthenticated result:", isAuth);
+
+    return isAuth;
   }, [user, getStoredUser, isTokenExpired]);
 
   // Get current user info
