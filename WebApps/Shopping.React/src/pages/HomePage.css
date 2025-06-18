@@ -49,11 +49,21 @@
   opacity: 0.9;
 }
 
+.auth-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
 .hero-btn {
   font-size: 1.1rem;
   padding: 12px 30px;
   text-decoration: none;
   display: inline-block;
+  min-width: 200px;
+  text-align: center;
 }
 
 .features-section {
