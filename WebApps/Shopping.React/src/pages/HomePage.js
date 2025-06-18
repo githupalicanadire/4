@@ -1,21 +1,50 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 import "./HomePage.css";
 
 const HomePage = () => {
+  const { isAuthenticated, getCurrentUser } = useAuth();
+  const isAuth = isAuthenticated();
+  const userName = getCurrentUser();
+
   return (
     <div className="home-page">
       <div className="hero-section">
         <div className="hero-content">
           <h1>🎪 ToyLand'e Hoş Geldiniz! 🎠</h1>
-          <p>
-            🌟 Çocukların hayal dünyasını renklendiren en eğlenceli oyuncaklar
-            burada! 🎨
-          </p>
-          <p>🚀 Keşfetmeye hazır mısınız? 🎁</p>
-          <Link to="/products" className="btn btn-primary hero-btn">
-            🧸 Oyuncakları Keşfet 🎮
-          </Link>
+          {isAuth ? (
+            <>
+              <p>🎉 Hoş geldin, {userName}! 🌟</p>
+              <p>
+                🛒 Sepetine ürün ekleyebilir ve siparişlerini takip edebilirsin!
+              </p>
+              <div className="auth-actions">
+                <Link to="/products" className="btn btn-primary hero-btn">
+                  🧸 Oyuncakları Keşfet 🎮
+                </Link>
+                <Link to="/cart" className="btn btn-secondary hero-btn">
+                  🛒 Sepetim
+                </Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <p>
+                🌟 Çocukların hayal dünyasını renklendiren en eğlenceli
+                oyuncaklar burada! 🎨
+              </p>
+              <p>🔑 Sepete ürün eklemek ve sipariş vermek için giriş yapın!</p>
+              <div className="auth-actions">
+                <Link to="/products" className="btn btn-secondary hero-btn">
+                  🧸 Oyuncakları İncele 👀
+                </Link>
+                <Link to="/login" className="btn btn-primary hero-btn">
+                  🔑 Giriş Yap & Alışveriş Et 🛒
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
