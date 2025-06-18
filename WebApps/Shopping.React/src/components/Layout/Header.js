@@ -68,14 +68,21 @@ const Header = () => {
               </Link>
             )}
 
-            {process.env.NODE_ENV === "development" && isAuth && (
+            {process.env.NODE_ENV === "development" && (
               <>
-                <Link to="/debug" className="nav-link debug-link">
-                  🔧 Debug
+                <Link to="/auth-debug" className="nav-link debug-link">
+                  🔍 Auth
                 </Link>
-                <Link to="/jwt-debug" className="nav-link debug-link">
-                  🔑 JWT
-                </Link>
+                {isAuth && (
+                  <>
+                    <Link to="/debug" className="nav-link debug-link">
+                      🔧 Debug
+                    </Link>
+                    <Link to="/jwt-debug" className="nav-link debug-link">
+                      🔑 JWT
+                    </Link>
+                  </>
+                )}
               </>
             )}
           </nav>
