@@ -84,12 +84,11 @@ const ProductsPage = () => {
       if (!isAuthenticated()) {
         showNotification(
           "🔐 Sepete ürün eklemek için giriş yapmalısınız!",
-          "warning"
+          "warning",
         );
         return;
       }
 
-      const user = getCurrentUser();
       const item = {
         productId: product.id,
         productName: product.name,
@@ -98,13 +97,13 @@ const ProductsPage = () => {
         color: "Default",
       };
 
-      await basketService.addItemToBasket(user, item);
+      await basketService.addItemToBasket(item); // JWT-based, no username needed
       showNotification(`🎉 ${product.name} sepetinize eklendi! 🛒`);
     } catch (error) {
       console.error("Add to cart error:", error);
       showNotification(
         `😔 Ürün sepete eklenirken hata oluştu: ${error.message}`,
-        "error"
+        "error",
       );
     } finally {
       setAddingToCart((prev) => ({ ...prev, [product.id]: false }));
