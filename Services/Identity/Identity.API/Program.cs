@@ -14,10 +14,7 @@ using Duende.IdentityServer.Stores;
 using Duende.IdentityServer.Validation;
 using Duende.IdentityServer;
 using Identity.API.Configuration;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System.IdentityModel.Tokens.Jwt;
+// Removed unused JWT imports - IdentityServer handles token generation
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using HealthChecks.UI.Client;
 using Microsoft.OpenApi.Models;
