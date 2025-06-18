@@ -109,11 +109,7 @@ public static class Config
                 SlidingRefreshTokenLifetime = 3600 * 24 * 7, // 7 days
 
                 // Enable resource owner password flow for direct login
-                AllowPlainTextPkce = false,
-
-                Properties = {
-                    { "description", "ToyLand e-commerce shopping application for toy enthusiasts" }
-                }
+                AllowPlainTextPkce = false
             },
 
             // API Gateway Client (Machine to Machine)
