@@ -5,6 +5,14 @@ export const basketService = {
   getBasket: async () => {
     try {
       console.log(`🛒 Fetching current user's basket via JWT...`);
+
+      // Check if token exists before making request
+      const token = localStorage.getItem("access_token");
+      console.log("🔑 Token exists:", !!token);
+      if (token) {
+        console.log("🔑 Token preview:", token.substring(0, 50) + "...");
+      }
+
       const response = await api.get(`/basket-service/basket`);
 
       // Backend GetBasketResponse formatında { cart: ShoppingCart } döner
