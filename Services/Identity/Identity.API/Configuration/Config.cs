@@ -123,8 +123,7 @@ public static class Config
                 ClientName = "API Gateway",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
                 ClientSecrets = { new Secret("default-gateway-secret-dev-only".Sha256()) },
-                AllowedScopes = { "gateway", "catalog", "basket", "ordering" },
-                Claims = { new ClientClaim("client_type", "gateway") }
+                AllowedScopes = { "gateway", "catalog", "basket", "ordering" }
             },
 
             // Service to Service Clients (Simplified - services should use gateway)
@@ -134,8 +133,7 @@ public static class Config
                 ClientName = "Microservices Internal Client",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
                 ClientSecrets = { new Secret("default-microservices-secret-dev-only".Sha256()) },
-                AllowedScopes = { "catalog", "basket", "ordering", "shopping_api" },
-                Claims = { new ClientClaim("client_type", "microservice") }
+                AllowedScopes = { "catalog", "basket", "ordering", "shopping_api" }
             },
 
             // Demo Client for Testing (Always enabled for development)
