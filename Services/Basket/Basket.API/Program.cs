@@ -53,6 +53,36 @@ builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(
 //Async Communication Services
 builder.Services.AddMessageBroker(builder.Configuration);
 
+//Authentication & Authorization
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.Authority = "http://localhost:6007";
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidIssuer = "http://localhost:6007",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+//CORS for React app
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowShoppingApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://localhost:6006")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
 //Cross-Cutting Services
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 
@@ -128,6 +158,10 @@ async Task InitializeDatabaseAsync(WebApplication app)
 }
 
 // Configure the HTTP request pipeline.
+app.UseCors("AllowShoppingApp");
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapCarter();
 app.UseExceptionHandler(options => { });
 app.UseHealthChecks("/health",
