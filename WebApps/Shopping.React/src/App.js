@@ -39,15 +39,10 @@ function App() {
               }
             />
 
+            {/* Semi-public routes - viewable by all, actions require auth */}
+            <Route path="/products" element={<ProductsPage />} />
+
             {/* Protected routes - require authentication */}
-            <Route
-              path="/products"
-              element={
-                <ProtectedRoute>
-                  <ProductsPage />
-                </ProtectedRoute>
-              }
-            />
             <Route
               path="/cart"
               element={
