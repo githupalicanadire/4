@@ -340,15 +340,18 @@ export const AuthProvider = ({ children }) => {
             if (!refreshed) {
               console.log("❌ Token refresh failed, clearing session");
               clearStoredAuth();
+              setUser(null);
             }
           } else {
-            console.log("🔄 Restoring valid session");
+            console.log("🔄 Restoring valid session for:", storedUser.username);
             setUser(storedUser);
             api.defaults.headers.common["Authorization"] =
               `Bearer ${storedToken}`;
+            console.log("✅ User state restored successfully");
           }
         } else {
-          console.log("���️ No stored session found");
+          console.log("ℹ️ No stored session found");
+          setUser(null);
         }
       } catch (error) {
         console.error("❌ Auth initialization error:", error);
