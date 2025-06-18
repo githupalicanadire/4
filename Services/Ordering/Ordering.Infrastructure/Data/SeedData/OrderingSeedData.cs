@@ -85,13 +85,13 @@ public static class OrderingSeedData
         adminOrder.Add(ProductId.Of(lamborghiniProduct.Id), 1, lamborghiniProduct.Price);
 
         // Set order as completed and created 7 days ago
-        var statusProperty = typeof(Order).GetProperty(nameof(Order.Status));
-        statusProperty?.SetValue(adminOrder, OrderStatus.Completed);
+        var adminStatusProperty = typeof(Order).GetProperty(nameof(Order.Status));
+        adminStatusProperty?.SetValue(adminOrder, OrderStatus.Completed);
 
-        var createdAtProperty = typeof(Order).GetProperty("CreatedAt") ?? typeof(Order).GetProperty("Created");
-        if (createdAtProperty != null && createdAtProperty.CanWrite)
+        var adminCreatedAtProperty = typeof(Order).GetProperty("CreatedAt") ?? typeof(Order).GetProperty("Created");
+        if (adminCreatedAtProperty != null && adminCreatedAtProperty.CanWrite)
         {
-            createdAtProperty.SetValue(adminOrder, DateTime.UtcNow.AddDays(-7));
+            adminCreatedAtProperty.SetValue(adminOrder, DateTime.UtcNow.AddDays(-7));
         }
 
         orders.Add(adminOrder);
