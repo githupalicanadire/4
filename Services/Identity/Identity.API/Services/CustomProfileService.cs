@@ -60,6 +60,10 @@ public class CustomProfileService : IProfileService
             claims.Add(new Claim(JwtClaimTypes.PreferredUserName, user.UserName ?? ""));
         }
 
+        // Always include username for basket operations (regardless of scope)
+        claims.Add(new Claim("username", user.UserName ?? ""));
+        claims.Add(new Claim("user_id", user.Id));
+
         // Add email claims if email scope requested
         if (requestedClaimTypes.Contains(JwtClaimTypes.Email))
         {
