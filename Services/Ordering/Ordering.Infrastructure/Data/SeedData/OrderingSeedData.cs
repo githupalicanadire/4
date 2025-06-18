@@ -22,20 +22,20 @@ public static class OrderingSeedData
     {
         var orders = new List<Order>();
 
-        // Sample customers from Identity service (including admin)
+        // Sample customers - using generated GUIDs (no hardcoded values)
         var customers = new[]
         {
-            new { UserName = "admin", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa5") },
-            new { UserName = "swn", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa6") },
-            new { UserName = "alice", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa7") },
-            new { UserName = "bob", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa8") },
-            new { UserName = "emily", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afa9") },
-            new { UserName = "michael", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afaa") },
-            new { UserName = "sarah", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afab") },
-            new { UserName = "david", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afac") },
-            new { UserName = "lisa", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afad") },
-            new { UserName = "john", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afae") },
-            new { UserName = "maria", CustomerId = Guid.Parse("3fa85f64-5717-4562-b3fc-2c963f66afaf") }
+            new { UserName = "admin", CustomerId = Guid.NewGuid() },
+            new { UserName = "swn", CustomerId = Guid.NewGuid() },
+            new { UserName = "alice", CustomerId = Guid.NewGuid() },
+            new { UserName = "bob", CustomerId = Guid.NewGuid() },
+            new { UserName = "emily", CustomerId = Guid.NewGuid() },
+            new { UserName = "michael", CustomerId = Guid.NewGuid() },
+            new { UserName = "sarah", CustomerId = Guid.NewGuid() },
+            new { UserName = "david", CustomerId = Guid.NewGuid() },
+            new { UserName = "lisa", CustomerId = Guid.NewGuid() },
+            new { UserName = "john", CustomerId = Guid.NewGuid() },
+            new { UserName = "maria", CustomerId = Guid.NewGuid() }
         };
 
         // Sample products (matching Catalog service toy products exactly)
