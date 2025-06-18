@@ -31,10 +31,9 @@ public class CustomProfileService : IProfileService
             return;
         }
 
-        var principal = await _claimsFactory.CreateAsync(user);
-        var claims = principal.Claims.ToList();
+        var claims = new List<Claim>();
 
-        // Add custom claims with proper constructors
+        // Add standard claims
         claims.Add(new Claim(JwtClaimTypes.Subject, user.Id));
         claims.Add(new Claim(JwtClaimTypes.Name, user.FullName ?? ""));
         claims.Add(new Claim(JwtClaimTypes.GivenName, user.FirstName ?? ""));
@@ -50,8 +49,14 @@ public class CustomProfileService : IProfileService
             claims.Add(new Claim(JwtClaimTypes.Role, role));
         }
 
-        // Filter claims based on requested scopes
+        // Add custom user claims from ASP.NET Identity
+        var userClaims = await _userManager.GetClaimsAsync(user);
+        claims.AddRange(userClaims);
+
+        // Remove duplicates and filter by requested claim types
         context.IssuedClaims = claims
+            .GroupBy(x => x.Type)
+            .Select(group => group.First()) // Take first of each type to avoid duplicates
             .Where(x => context.RequestedClaimTypes.Contains(x.Type))
             .ToList();
     }
