@@ -112,10 +112,10 @@ const CartPage = () => {
     }
 
     try {
-      console.log("🧹 Clearing basket for user:", user);
-      await basketService.deleteBasket(user);
+      console.log("🧹 Clearing basket via JWT...");
+      await basketService.deleteBasket(); // JWT-based, no username needed
       setBasket({
-        userName: user,
+        userName: "", // Will be set by backend from JWT
         items: [],
         totalPrice: 0,
       });
