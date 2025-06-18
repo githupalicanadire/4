@@ -57,8 +57,8 @@ public static class Config
             {
                 ClientId = "shopping-spa",
                 ClientName = "Shopping React SPA",
-                AllowedGrantTypes = new List<string> 
-                { 
+                AllowedGrantTypes = new List<string>
+                {
                     GrantTypes.Code.First(),
                     GrantTypes.ResourceOwnerPassword.First()
                 },
@@ -105,45 +105,30 @@ public static class Config
                 ClientId = "gateway-client",
                 ClientName = "API Gateway",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
-                ClientSecrets = { new Secret("gateway-secret".Sha256()) },
-                AllowedScopes = { "gateway", "catalog", "basket", "ordering" }
+                ClientSecrets = { new Secret(Environment.GetEnvironmentVariable("GATEWAY_CLIENT_SECRET") ?? "default-gateway-secret-dev-only".Sha256()) },
+                AllowedScopes = { "gateway", "catalog", "basket", "ordering" },
+                Claims = { new ClientClaim("client_type", "gateway") }
             },
 
-            // Service to Service Clients
+            // Service to Service Clients (Simplified - services should use gateway)
             new Client
             {
-                ClientId = "catalog-service",
-                ClientName = "Catalog Service",
+                ClientId = "microservices-client",
+                ClientName = "Microservices Internal Client",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
-                ClientSecrets = { new Secret("catalog-secret".Sha256()) },
-                AllowedScopes = { "catalog" }
+                ClientSecrets = { new Secret(Environment.GetEnvironmentVariable("MICROSERVICES_CLIENT_SECRET") ?? "default-microservices-secret-dev-only".Sha256()) },
+                AllowedScopes = { "catalog", "basket", "ordering", "shopping_api" },
+                Claims = { new ClientClaim("client_type", "microservice") }
             },
 
-            new Client
-            {
-                ClientId = "basket-service",
-                ClientName = "Basket Service",
-                AllowedGrantTypes = GrantTypes.ClientCredentials,
-                ClientSecrets = { new Secret("basket-secret".Sha256()) },
-                AllowedScopes = { "basket", "catalog" }
-            },
-
-            new Client
-            {
-                ClientId = "ordering-service",
-                ClientName = "Ordering Service",
-                AllowedGrantTypes = GrantTypes.ClientCredentials,
-                ClientSecrets = { new Secret("ordering-secret".Sha256()) },
-                AllowedScopes = { "ordering", "basket" }
-            },
-
-            // Demo Client for Testing (Resource Owner Password)
+            // Demo Client for Testing (Only for development)
             new Client
             {
                 ClientId = "demo-client",
-                ClientName = "Demo Client",
+                ClientName = "Demo Client (Development Only)",
+                Enabled = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development",
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
-                ClientSecrets = { new Secret("demo-secret".Sha256()) },
+                ClientSecrets = { new Secret("demo-secret-dev-only".Sha256()) },
                 AllowedScopes = {
                     IdentityServerConstants.StandardScopes.OpenId,
                     IdentityServerConstants.StandardScopes.Profile,
@@ -157,13 +142,15 @@ public static class Config
                 },
                 AllowedCorsOrigins = {
                     "http://localhost:6006",
-                    "http://localhost:3000"
+                    "http://localhost:3000",
+                    "http://localhost:8080"
                 },
                 RequireConsent = false,
                 AllowOfflineAccess = true,
                 AccessTokenLifetime = 3600,
                 RefreshTokenExpiration = TokenExpiration.Sliding,
-                SlidingRefreshTokenLifetime = 3600 * 24 * 30 // 30 days
+                SlidingRefreshTokenLifetime = 3600 * 24 * 7, // 7 days for demo
+                Description = "Demo client for development and testing purposes only"
             }
         };
 }
