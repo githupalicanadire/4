@@ -12,3 +12,5 @@ global using Basket.API.Data;
 global using BuildingBlocks.Exceptions.Handler;
 global using Basket.API.Dtos;
 global using Microsoft.Extensions.Caching.Distributed;
+global using Microsoft.AspNetCore.Authentication.JwtBearer;
+global using Microsoft.IdentityModel.Tokens;
