@@ -62,7 +62,42 @@ public static class OrderingSeedData
         var random = new Random(42); // Fixed seed for consistent results
         var orderCounter = 1;
 
-        foreach (var customer in customers)
+        // Create special admin order with Lamborghini
+        var adminCustomer = customers.First(c => c.UserName == "admin");
+        var adminOrderId = OrderId.Of(Guid.NewGuid());
+        var adminCustomerId = CustomerId.Of(adminCustomer.CustomerId);
+        var adminOrderName = OrderName.Of($"ORD-ADMIN-001");
+
+        var adminAddress = Address.Of("Admin", "User", "admin@shopping.com", "İstanbul Teknoloji Merkezi, Maslak", "Turkey", "Istanbul", "34485");
+        var adminPayment = Payment.Of("Admin User", "5555-****-****-4444", "12/25", "***", 1);
+
+        var adminOrder = Order.Create(
+            adminOrderId,
+            adminCustomerId,
+            adminOrderName,
+            adminAddress,
+            adminAddress,
+            adminPayment
+        );
+
+        // Add Lamborghini to admin order
+        var lamborghiniProduct = sampleProducts.First(p => p.Name.Contains("Lamborghini"));
+        adminOrder.Add(ProductId.Of(lamborghiniProduct.Id), 1, lamborghiniProduct.Price);
+
+        // Set order as completed and created 7 days ago
+        var statusProperty = typeof(Order).GetProperty(nameof(Order.Status));
+        statusProperty?.SetValue(adminOrder, OrderStatus.Completed);
+
+        var createdAtProperty = typeof(Order).GetProperty("CreatedAt") ?? typeof(Order).GetProperty("Created");
+        if (createdAtProperty != null && createdAtProperty.CanWrite)
+        {
+            createdAtProperty.SetValue(adminOrder, DateTime.UtcNow.AddDays(-7));
+        }
+
+        orders.Add(adminOrder);
+        orderCounter++;
+
+        foreach (var customer in customers.Where(c => c.UserName != "admin"))
         {
             // Each customer gets 1-3 orders
             var orderCount = random.Next(1, 4);
