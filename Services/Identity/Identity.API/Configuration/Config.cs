@@ -122,7 +122,7 @@ public static class Config
                 ClientId = "gateway-client",
                 ClientName = "API Gateway",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
-                ClientSecrets = { new Secret(Environment.GetEnvironmentVariable("GATEWAY_CLIENT_SECRET") ?? "default-gateway-secret-dev-only".Sha256()) },
+                ClientSecrets = { new Secret("default-gateway-secret-dev-only".Sha256()) },
                 AllowedScopes = { "gateway", "catalog", "basket", "ordering" },
                 Claims = { new ClientClaim("client_type", "gateway") }
             },
@@ -133,17 +133,17 @@ public static class Config
                 ClientId = "microservices-client",
                 ClientName = "Microservices Internal Client",
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
-                ClientSecrets = { new Secret(Environment.GetEnvironmentVariable("MICROSERVICES_CLIENT_SECRET") ?? "default-microservices-secret-dev-only".Sha256()) },
+                ClientSecrets = { new Secret("default-microservices-secret-dev-only".Sha256()) },
                 AllowedScopes = { "catalog", "basket", "ordering", "shopping_api" },
                 Claims = { new ClientClaim("client_type", "microservice") }
             },
 
-            // Demo Client for Testing (Only for development)
+            // Demo Client for Testing (Always enabled for development)
             new Client
             {
                 ClientId = "demo-client",
                 ClientName = "Demo Client (Development Only)",
-                Enabled = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development",
+                Enabled = true, // Always enabled for development/demo
                 AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
                 ClientSecrets = { new Secret("demo-secret-dev-only".Sha256()) },
                 AllowedScopes = {
