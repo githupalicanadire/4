@@ -40,45 +40,77 @@ export const AuthProvider = ({ children }) => {
     delete api.defaults.headers.common["Authorization"];
   }, []);
 
-  const storeAuthData = useCallback((userData, tokenData) => {
-    // Store tokens
-    localStorage.setItem("access_token", tokenData.access_token);
-    if (tokenData.refresh_token) {
-      localStorage.setItem("refresh_token", tokenData.refresh_token);
+  const decodeJWTExpiry = useCallback((token) => {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map(function (c) {
+            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(""),
+      );
+      const decoded = JSON.parse(jsonPayload);
+      return decoded.exp ? decoded.exp * 1000 : null; // Convert to milliseconds
+    } catch (error) {
+      console.error("Error decoding JWT:", error);
+      return null;
     }
-
-    // Store user data
-    const enrichedUser = {
-      // Token info
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-      expires_at: Date.now() + tokenData.expires_in * 1000,
-      token_type: tokenData.token_type || "Bearer",
-
-      // User profile from JWT or UserInfo
-      sub: userData.sub,
-      username: userData.preferred_username || userData.username,
-      email: userData.email,
-      firstName: userData.given_name,
-      lastName: userData.family_name,
-      name: userData.name,
-      roles: Array.isArray(userData.role)
-        ? userData.role
-        : [userData.role].filter(Boolean),
-
-      // Session info
-      loginTime: Date.now(),
-      profile: userData,
-    };
-
-    localStorage.setItem("user", JSON.stringify(enrichedUser));
-
-    // Set API default header
-    api.defaults.headers.common["Authorization"] =
-      `Bearer ${tokenData.access_token}`;
-
-    return enrichedUser;
   }, []);
+
+  const storeAuthData = useCallback(
+    (userData, tokenData) => {
+      // Store tokens
+      localStorage.setItem("access_token", tokenData.access_token);
+      if (tokenData.refresh_token) {
+        localStorage.setItem("refresh_token", tokenData.refresh_token);
+      }
+
+      // Get actual expiry from JWT token
+      const actualExpiry = decodeJWTExpiry(tokenData.access_token);
+
+      // Store user data
+      const enrichedUser = {
+        // Token info
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        expires_at: actualExpiry || Date.now() + tokenData.expires_in * 1000, // Use JWT exp or fallback
+        token_type: tokenData.token_type || "Bearer",
+
+        // User profile from JWT or UserInfo
+        sub: userData.sub,
+        username: userData.preferred_username || userData.username,
+        email: userData.email,
+        firstName: userData.given_name,
+        lastName: userData.family_name,
+        name: userData.name,
+        roles: Array.isArray(userData.role)
+          ? userData.role
+          : [userData.role].filter(Boolean),
+
+        // Session info
+        loginTime: Date.now(),
+        profile: userData,
+      };
+
+      localStorage.setItem("user", JSON.stringify(enrichedUser));
+
+      // Set API default header
+      api.defaults.headers.common["Authorization"] =
+        `Bearer ${tokenData.access_token}`;
+
+      console.log("📝 Stored auth data:", {
+        username: enrichedUser.username,
+        expires_at: new Date(enrichedUser.expires_at).toLocaleString(),
+        hasToken: !!enrichedUser.access_token,
+      });
+
+      return enrichedUser;
+    },
+    [decodeJWTExpiry],
+  );
 
   const isTokenExpired = useCallback((user) => {
     if (!user?.expires_at) return true;
